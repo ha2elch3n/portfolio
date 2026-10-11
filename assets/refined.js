@@ -4,7 +4,7 @@
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
   const animate = window.anime?.animate;
   const channels = new Map();
-  let projectCommit = null, currentPanel = null, previousImage = null;
+  let projectCommit = null, currentPanel = null, previousImage = null, projectSnapshot = null;
   function stop(channel) {
     const entry = channels.get(channel);
     if (!entry) return;
@@ -42,10 +42,15 @@
       panel.hidden = panel.id !== currentPanel;
     });
   }
+  function finishProjectTransition() {
+    stop('project'); stop('cards'); stop('project-out');
+    projectSnapshot?.remove(); projectSnapshot = null;
+  }
   window.portfolioUX = {
     switchPanel(id, apply) {
       // Finish immediately on interruption: no queued transitions or delayed navigation.
-      finishPageTransition();
+      finishPageTransition(); finishProjectTransition();
+      const pending = projectCommit; projectCommit = null; pending?.();
       const previous = currentPanel;
       const outgoing = previous ? document.getElementById(previous) : null;
       const focusWasInside = outgoing?.contains(document.activeElement);
@@ -63,17 +68,46 @@
       run('page-out',[outgoing],{opacity:[1,0],x:[0,-24*direction],duration:220,ease:'outCubic'});
       run('page-in',[incoming],{opacity:[0,1],x:[24*direction,0],duration:220,ease:'outCubic'},finishPageTransition);
     },
-    swapProject(apply) {
-      stop('project'); stop('cards'); projectCommit = null;
+    swapProject(apply, nextProject) {
+      finishProjectTransition(); projectCommit = null;
       const body = document.querySelector('.work-body');
-      const commit = () => {
-        projectCommit = null; apply();
-        run('project',[document.querySelector('.project-summary')],{opacity:[0.5,1],y:[6,0],duration:180,ease:'outCubic'});
-        // Animate the buttons, leaving their stable inner surface free for hover feedback.
-        run('cards',document.querySelectorAll('.video-card'),{opacity:[0.5,1],y:[6,0],delay:(_,i)=>Math.min(i,7)*25,duration:180,ease:'outCubic'});
-      };
-      projectCommit = commit;
-      run('project',[body],{opacity:[1,0.6],duration:70,ease:'outCubic'},commit);
+      const mobile = matchMedia('(max-width:700px)').matches;
+      if (mobile) {
+        const commit = () => {
+          projectCommit = null; apply();
+          run('project',[body],{opacity:[0.5,1],y:[6,0],duration:180,ease:'outCubic'});
+        };
+        projectCommit = commit;
+        run('project',[body],{opacity:[1,0.6],duration:70,ease:'outCubic'},commit);
+        return;
+      }
+      const order = ['crossin','research','chathub','kulikuli'];
+      const previous = document.querySelector('[data-project][aria-pressed=true]')?.dataset.project;
+      const direction = nextProject && order.indexOf(nextProject) < order.indexOf(previous) ? -1 : 1;
+      if (!reduced.matches && animate && currentPanel === 'work') {
+        // A non-interactive visual copy lets old and new content transition together.
+        const snapshot = body.cloneNode(true);
+        snapshot.classList.add('project-transition-copy'); snapshot.inert = true;
+        snapshot.setAttribute('aria-hidden','true'); snapshot.removeAttribute('aria-labelledby');
+        snapshot.querySelectorAll('[id]').forEach(node => {
+          const source = body.querySelector(`[id="${node.id}"]`);
+          const style = getComputedStyle(source);
+          ['font','color','margin','width','height','border-radius','display'].forEach(property => node.style.setProperty(property,style.getPropertyValue(property)));
+          node.removeAttribute('id');
+        });
+        snapshot.querySelectorAll('[tabindex]').forEach(node=>node.removeAttribute('tabindex'));
+        snapshot.style.left = body.offsetLeft+'px'; snapshot.style.top = body.offsetTop+'px';
+        snapshot.style.width = body.clientWidth+'px'; snapshot.style.height = body.clientHeight+'px';
+        snapshot.querySelector('.gallery-area').scrollTop = body.querySelector('.gallery-area').scrollTop;
+        body.parentElement.append(snapshot); projectSnapshot = snapshot;
+        // ScrollTop can only be applied after attachment.
+        snapshot.querySelector('.gallery-area').scrollTop = body.querySelector('.gallery-area').scrollTop;
+        snapshot.querySelector('.project-summary').scrollTop = body.querySelector('.project-summary').scrollTop;
+      }
+      apply();
+      if (currentPanel !== 'work') { finishProjectTransition(); return; }
+      if (projectSnapshot) run('project-out',[projectSnapshot],{opacity:[1,0],x:[0,-20*direction],duration:200,ease:'outCubic'});
+      run('project',[body],{opacity:[0,1],x:[20*direction,0],duration:200,ease:'outCubic'},finishProjectTransition);
     },
     openViewer() { run('viewer',[document.getElementById('player')],{opacity:[0,1],scale:[0.98,1],duration:180,ease:'outCubic'}); },
     imageChange() {
@@ -94,6 +128,17 @@
     }
   });
   document.getElementById('player').addEventListener('close',()=>{stop('viewer');stop('image');stop('image-out');previousImage?.remove();previousImage=null;});
+  // Non-interactive text has very subtle scaling, separate from clickable controls.
+  const readingGroups = {
+    'reading-title': '.panel h1,.panel h2,.panel h3,.panel h4,#video-title',
+    'reading-copy': '.hello-bio p,.hello-line,.hello-credential,.about-story p,.about-card p:not(.education-date),.skill-card li,.contact-description,.contact-role-list p,.contact-location,#project-description,#project-work,#project-responsibilities li,#viewer-context,.player-note',
+    'reading-label': '.eyebrow,.hello-proof>span,.hello-proof strong,.profile-subtitle,.photo-caption,.profile-footer,.profile-badge,.education-date,.education-place,.project-kicker'
+  };
+  Object.entries(readingGroups).forEach(([className, selector]) => {
+    document.querySelectorAll(selector).forEach(el => {
+      if (!el.closest('a,button,select')) el.classList.add(className);
+    });
+  });
   // Card hover uses CSS on stable surfaces, independent of page-entry animations.
   const hoverTargets = document.querySelectorAll('.contact-link,button:not(.video-card)');
   hoverTargets.forEach(el => {
@@ -115,11 +160,11 @@
   function reset() {
     [...channels.keys()].forEach(stop); indicatorAnimation?.cancel();
     hoverTargets.forEach(el=>el.style.removeProperty('transform')); previousImage?.remove(); previousImage=null;
-    finishPageTransition();
+    finishPageTransition(); finishProjectTransition();
     const project = projectCommit; projectCommit = null;
     project?.(); positionIndicator(true);
   }
   reduced.addEventListener('change', reset); fine.addEventListener('change',reset); window.addEventListener('blur',reset);
-  window.addEventListener('resize',finishPageTransition);
+  window.addEventListener('resize',()=>{finishPageTransition();finishProjectTransition();const pending=projectCommit;projectCommit=null;pending?.();});
   document.documentElement.classList.add('anime-motion');
 })();

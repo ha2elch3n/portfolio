@@ -39,7 +39,7 @@
     $('project-name').textContent = p.name;
     $('project-description').textContent = p.description;
     $('project-work').textContent = p.work;
-    $('project-responsibilities').replaceChildren(...p.role.split(' / ').map(role => { const li = document.createElement('li'); li.textContent = role; return li; }));
+    $('project-responsibilities').replaceChildren(...p.role.split(' / ').map(role => { const li = document.createElement('li'); li.className = 'reading-copy'; li.textContent = role; return li; }));
     $('mobile-project').value = project;
     $('product-social').hidden = !p.social;
     if (p.social) { $('product-social').href = p.social; $('social-label').textContent = p.socialLabel; $('product-social').setAttribute('aria-label', p.name + ' on ' + p.socialLabel); }
@@ -70,7 +70,7 @@
         viewItems = list; viewIndex = index; showItem(); $('player').showModal(); window.portfolioUX?.openViewer();
         if (item.type !== 'image') $('focused-video').play().catch(() => {});
       });
-      gallery.append(button); mediaObserver.observe(content);
+      gallery.append(button); window.portfolioLoading.image(img, frame); mediaObserver.observe(content);
     });
   }
   function showItem() {
@@ -90,11 +90,11 @@
     $('viewer-next').disabled = viewIndex === viewItems.length - 1;
     $('image-pager').hidden = !item.images;
     if (image) showSlide();
-    else { video.preload = 'auto'; video.src = item.file; video.poster = item.poster; video.load(); }
+    else { video.preload = 'auto'; video.src = item.file; video.poster = item.poster; window.portfolioLoading.video(video); video.load(); }
   }
   function showSlide() {
     const item = viewItems[viewIndex], slides = item.images || [{ file: item.file, title: titleOf(item) }], slide = slides[slideIndex];
-    window.portfolioUX?.imageChange(); $('focused-image').src = slide.file; $('focused-image').alt = slide.title;
+    window.portfolioUX?.imageChange(); $('focused-image').src = slide.file; $('focused-image').alt = slide.title; window.portfolioLoading.image($('focused-image'),document.querySelector('.viewer-media'));
     $('image-count').textContent = (slideIndex + 1) + ' / ' + slides.length;
     $('image-prev').disabled = slideIndex === 0; $('image-next').disabled = slideIndex === slides.length - 1;
   }
@@ -110,7 +110,7 @@
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) $('player').close();
   });
   $('player').addEventListener('close', () => {
-    $('focused-video').pause(); $('focused-video').removeAttribute('src'); $('focused-video').load(); $('focused-image').removeAttribute('src');
+    window.portfolioLoading.clear(document.querySelector('.viewer-media')); $('focused-video').pause(); $('focused-video').removeAttribute('src'); $('focused-video').load(); $('focused-image').removeAttribute('src');
   });
   function switchPanel(id) {
     const order = ['home', 'work', 'about', 'contact'];
@@ -131,7 +131,7 @@
     window.portfolioUX.swapProject(() => {
       pendingProject = null; project = next; format = 'video'; render();
       document.dispatchEvent(new CustomEvent('portfolio:projectchange', {detail: {project}}));
-    });
+    }, next);
   }
   document.querySelectorAll('[data-project]').forEach(button => button.addEventListener('click', () => selectProject(button.dataset.project)));
   $('mobile-project').addEventListener('change', event => selectProject(event.target.value));
