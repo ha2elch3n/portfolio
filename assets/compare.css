@@ -1,0 +1,4 @@
+/* Temporary review controls: independent from either design. */
+.design-compare{display:flex;align-items:center;gap:3px;font-size:11px;line-height:1.2}.design-compare>span{margin-right:7px;color:var(--muted)}.design-compare a{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 10px;border-radius:20px;border:1px solid transparent}.design-compare a[aria-current=true]{background:#e8eddb;color:#364329;border-color:#d7dfc7}.design-compare a:hover{background:#f0f2e9}@media(max-width:700px){footer>#position,.design-compare>span{display:none}.design-compare{font-size:10px}.design-compare a{padding:5px 8px}}
+/* A comparison reload should not repeat the opening screen. */
+html[data-comparing] .opening{display:none}

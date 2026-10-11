@@ -1,0 +1,46 @@
+/* Refined presentation. Base typography and natural media proportions stay intact. */
+html[data-design=refined] .panel,html[data-design=refined] dialog[open]{animation:none}
+header>nav{position:relative;isolation:isolate;gap:5px;padding:4px;border:1px solid #dedfd5b8;border-radius:30px;background:linear-gradient(145deg,#ffffffd9,#f1f2e9b8);box-shadow:inset 0 1px 0 #fff,0 3px 12px #282a2407;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+header>nav button{padding:8px 17px;z-index:1;min-height:40px;font-size:13px}header>nav button[aria-pressed=true]:after{display:none}
+.nav-indicator{position:absolute;top:4px;left:0;height:40px;border-radius:24px;background:#e6ecd7;box-shadow:inset 0 1px 0 #ffffffc0;pointer-events:none;z-index:0}
+.about-card{background:#f6f6ef;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:inset 0 1px 0 #fff,0 3px 12px #282a2405}
+.profile-card{box-shadow:0 8px 25px #282a240a,0 1px 3px #282a2405}
+#work .work-head{margin-bottom:20px}#work .work-body{align-items:start}
+.project-kicker{font-size:10px;letter-spacing:.6px;font-weight:600;color:#73824e;margin:19px 0 5px}
+#project-description{margin:0;font-size:14px;line-height:1.7;color:var(--ink)}#project-work{margin:0;font-size:13px;line-height:1.7}
+#project-responsibilities{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:0;margin:0 0 22px;font-size:12px;line-height:1.6;color:var(--muted)}
+#work .media-card-content{box-shadow:0 3px 12px #282a2409;transition:transform 160ms var(--ease-out),box-shadow 160ms var(--ease-out)}
+#work .play{left:auto;transform:none;width:34px;height:34px;background:#fbfbf6e6}
+.mobile-project-switch{display:none}
+#player{border-radius:20px;box-shadow:0 24px 80px #0004}#player::backdrop{background:#20231dbd;backdrop-filter:blur(5px);animation:backdrop-in 180ms ease-out}
+#close-player,.image-pager button,.viewer-pager button{border:1px solid #dedfd5b8;background:linear-gradient(145deg,#ffffffd9,#f1f2e9c7);box-shadow:inset 0 1px 0 #fff,0 3px 12px #282a2407;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:50%;min-width:44px;min-height:44px}
+.contact-linkedin{background:linear-gradient(145deg,#ffffffd9,#f1f2e9b8);box-shadow:inset 0 1px 0 #fff,0 4px 14px #282a2409}
+@keyframes backdrop-in{from{background:#20231d00}to{background:#20231dbd}}
+@media(hover:hover) and (pointer:fine){#work .video-card:hover .media-card-content{box-shadow:0 7px 20px #282a2414}#work .video-card:hover img{filter:none}}
+@media(max-width:700px){header>nav{gap:0;padding:3px}header>nav button{font-size:11px;padding:7px 10px;min-height:38px}.nav-indicator{top:3px;height:38px}#work .work-head{display:none}.mobile-project-switch{display:flex;position:sticky;top:-12px;z-index:5;gap:12px;align-items:center;padding:12px 0;margin:0 0 16px;background:var(--paper);border-bottom:1px solid var(--line)}.mobile-project-switch label{font:400 25px Georgia,serif;letter-spacing:-.5px}.mobile-project-switch select{min-width:0;flex:1;font:inherit;font-size:12px;padding:10px 8px;color:var(--ink);background:#f1f3e8;border:1px solid #d9dece;border-radius:12px;min-height:44px}.mobile-project-switch select:focus-visible{outline:2px solid #748c27;outline-offset:2px}#project-description{font-size:13px}#project-work,#project-responsibilities{font-size:12px}.project-kicker{margin:14px 0 4px}#project-responsibilities{margin-bottom:14px}#work .project-summary{padding-bottom:22px}#work .play{width:30px;height:30px}.viewer-pager button{width:44px;height:44px}}
+@media(prefers-reduced-motion:reduce){#player::backdrop{animation:none}}
+@media(prefers-reduced-transparency:reduce){header>nav,.contact-linkedin,#close-player,.image-pager button,.viewer-pager button{background:#f4f5ec;backdrop-filter:none;-webkit-backdrop-filter:none}#player::backdrop{backdrop-filter:none;background:#20231ded}}
+
+.viewer-media{position:relative}.viewer-media .image-transition-layer{position:absolute;inset:0;pointer-events:none;object-fit:contain;width:100%;height:100%;z-index:1}
+
+/* Hover refinement: stable hit areas, gentle lift and soft depth. */
+html[data-design=refined] .profile-card,
+html[data-design=refined] .about-card,
+html[data-design=refined] .profile-photo,
+html[data-design=refined] .profile-badge,
+html[data-design=refined] #work .media-card-content{
+ transition:transform 280ms cubic-bezier(.22,1,.36,1),box-shadow 280ms cubic-bezier(.22,1,.36,1);
+ transform-origin:center;
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ html[data-design=refined] .profile-card:hover{transform:translateY(-6px) rotate(1deg) scale(1.015);box-shadow:0 20px 44px #282a241c,0 5px 14px #282a240a;z-index:2}
+ html[data-design=refined] .about-card:hover{transform:translateY(-5px) scale(1.018);box-shadow:0 16px 32px #282a2417,0 4px 10px #282a2408;z-index:2}
+ html[data-design=refined] .profile-photo:hover{transform:translateY(-3px) rotate(-3deg) scale(1.02);box-shadow:0 12px 24px #33331c26}
+ html[data-design=refined] .profile-badge:hover{transform:translateY(-3px) scale(1.025);box-shadow:0 9px 20px #282a241a}
+ html[data-design=refined] #work .video-card:hover .media-card-content{transform:translateY(-5px) scale(1.025);box-shadow:0 16px 32px #282a2421,0 4px 10px #282a240b}
+ html[data-design=refined] #work .video-card:hover{z-index:2}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-design=refined] :is(.profile-card,.about-card,.profile-photo,.profile-badge),
+ html[data-design=refined] #work .media-card-content{transition:none}
+}

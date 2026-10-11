@@ -1,20 +1,143 @@
 (() => {
-let lang='en',project='chathub',format='video',page=0,viewIndex=0,viewItems=[],slideIndex=0;
-const $=id=>document.getElementById(id),pick=(zh,en)=>lang==='zh'?zh:en,translated=v=>Array.isArray(v)?v[lang==='zh'?0:1]:v;
-const projects={chathub:{name:'ChatHub',label:'01 / TIKTOK',description:['AI 聚合产品的 TikTok 内容，围绕功能介绍与使用场景展开。','TikTok videos showing what ChatHub does and how to use it'],role:['选题 / 脚本 / 拍摄 / 剪辑','Ideas / Scripts / Filming / Editing']},kulikuli:{name:'KuliKuli',label:'02 / INSTAGRAM',description:['翻译产品的 Instagram 内容，展示日常与旅行使用场景。','Instagram videos and carousel posts showing KuliKuli in everyday life and while travelling'],role:['选题 / 脚本 / 拍摄 / 剪辑','Ideas / Scripts / Filming / Editing']},crossin:{name:'Crossin',label:'03 / META · PAID SOCIAL',description:['面向海外用户的 Meta 广告视频，展示照片分享与明信片功能。','Meta ads showing how to share photos and make postcards with Crossin'],role:['用户洞察 / 创意 / 文案 / 视频','Audience research / Ideas / Copy / Video production']},research:{name:['招募与活动','Research & campaigns'],label:'04 / RESEARCH & CAMPAIGNS',description:['研究招募与活动推广素材，覆盖城市本地人、兴趣社群和文化探索者。','Videos and posters for recruiting research participants and promoting campaigns'],role:['人群理解 / 文案 / 视频 / 海报','Audience research / Copy / Videos / Posters']}};
-const posts=[['reel','DJY5RmvvgPN'],['reel','DLycYZ8O1zC'],['p','DNe2EaqxjaH'],['reel','DPkekW8DbdM'],['reel','DP2QCPMjpEQ']];
-function items(){return project==='chathub'?videos:project==='crossin'?portfolioMedia.crossin:project==='research'?portfolioMedia.research.filter(x=>x.type===format):portfolioMedia.kulikuli}
-function render(){const p=projects[project];$('project-number').textContent=p.label;$('project-name').textContent=translated(p.name);$('project-description').textContent=translated(p.description);$('project-role').textContent=pick('我的职责：','My role: ')+translated(p.role);document.querySelectorAll('[data-project]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.project===project)));document.querySelector('[data-format="image"]').textContent=project==='kulikuli'?'Carousel':'Posters';$('format-tabs').hidden=project!=='research';document.querySelectorAll('[data-format]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.format===format)));
-const size=matchMedia('(max-width:700px)').matches?2:3,list=items(),pages=Math.max(1,Math.ceil(list.length/size));page=Math.min(page,pages-1);const gallery=$('gallery');gallery.replaceChildren();
-gallery.dataset.count=String(list.length);list.forEach((item,j)=>{const i=j;const title=item.displayTitle?translated(item.displayTitle):pick('作品 ','Video ')+String(i+1).padStart(2,'0');const b=document.createElement('button');b.className='video-card'+(item.type==='image'?' image-card':'');b.setAttribute('aria-label',pick('打开：','View: ')+title);const frame=document.createElement('span');frame.className='frame';const img=document.createElement('img');img.src=item.poster;img.alt=title;img.decoding='async';const play=document.createElement('span');play.className='play';play.textContent=item.type==='image'?'↗':'▶';frame.append(img,play);const label=document.createElement('span');label.className='card-label';label.textContent=title;const meta=document.createElement('span');meta.className='card-meta';meta.textContent=item.type==='image'?pick('海报 · 点击放大','Poster · enlarge'):(item.duration+'s');const caption=document.createElement('span');caption.className='card-caption';caption.append(label);frame.append(caption);b.append(frame);b.addEventListener('click',()=>{viewItems=list;viewIndex=i;showItem();$('player').showModal();if(item.type!=='image')$('focused-video').play().catch(()=>{})});gallery.append(b)});
-$('pager').hidden=true;$('previous').disabled=page===0;$('next').disabled=page===pages-1;$('page-count').textContent=(page+1)+' / '+pages;$('gallery-note').textContent=pick('共 '+list.length+' 件 · 点击聚焦查看',list.length+' works · click to explore')}
-function showItem(){slideIndex=0;const item=viewItems[viewIndex],isImage=item.type==='image';$('focused-video').pause();$('focused-video').removeAttribute('src');$('focused-video').load();$('focused-video').hidden=isImage;$('focused-image').hidden=!isImage;$('viewer-project').textContent=projects[project].label+' / '+translated(projects[project].name);$('video-title').textContent=item.displayTitle?translated(item.displayTitle):pick('作品 ','Video ')+String(viewIndex+1).padStart(2,'0');$('video-duration').textContent=isImage?(project==='kulikuli'?'Image post · 5 slides':'Poster'):item.duration+'s';$('original').hidden=!item.url;if(item.url)$('original').href=item.url;$('viewer-context').textContent=item.context?translated(item.context):translated(projects[project].description);document.querySelector('.player-note').textContent=pick('我的职责：','My role: ')+translated(projects[project].role);$('viewer-count').textContent=(viewIndex+1)+' / '+viewItems.length;$('viewer-prev').disabled=viewIndex===0;$('viewer-next').disabled=viewIndex===viewItems.length-1;
-$('image-pager').hidden=!item.images;if(isImage){showSlide()}else{$('focused-video').preload='auto';$('focused-video').src=item.file;$('focused-video').poster=item.poster;$('focused-video').load()}}
-function showSlide(){const item=viewItems[viewIndex],slides=item.images||[{file:item.file,title:translated(item.displayTitle)}],slide=slides[slideIndex];$('focused-image').src=slide.file;$('focused-image').alt=slide.title;$('image-count').textContent=(slideIndex+1)+' / '+slides.length;$('image-prev').disabled=slideIndex===0;$('image-next').disabled=slideIndex===slides.length-1;}
-$('image-prev').addEventListener('click',()=>{if(slideIndex>0){slideIndex--;showSlide()}});$('image-next').addEventListener('click',()=>{if(slideIndex<viewItems[viewIndex].images.length-1){slideIndex++;showSlide()}});
-$('viewer-prev').addEventListener('click',()=>{if(viewIndex>0){viewIndex--;showItem()}});$('viewer-next').addEventListener('click',()=>{if(viewIndex<viewItems.length-1){viewIndex++;showItem()}});$('focused-video').addEventListener('error',()=>{$('viewer-context').textContent=pick('视频加载失败，请重新打开作品，或检查网络连接。','This video couldn’t load. Please reopen it or check your connection')});$('close-player').addEventListener('click',()=>$('player').close());$('player').addEventListener('click',e=>{if(e.target===$('player')){const r=$('player').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('player').close()}});$('player').addEventListener('close',()=>{$('focused-video').pause();$('focused-video').removeAttribute('src');$('focused-video').load();$('focused-image').removeAttribute('src')});
-function switchPanel(id){if(!['home','work','about','contact'].includes(id))id='home';document.querySelectorAll('.panel').forEach(p=>{p.hidden=p.id!==id;p.classList.toggle('active',p.id===id)});document.querySelectorAll('[data-panel]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.panel===id)));$('position').textContent='0'+(['home','work','about','contact'].indexOf(id)+1)+' / 04';if($('player').open)$('player').close()}
-document.querySelectorAll('[data-panel],[data-go]').forEach(b=>b.addEventListener('click',()=>location.hash=b.dataset.panel||b.dataset.go));addEventListener('hashchange',()=>switchPanel(location.hash.slice(1)));document.querySelectorAll('[data-project]').forEach(b=>b.addEventListener('click',()=>{project=b.dataset.project;page=0;render()}));document.querySelectorAll('[data-format]').forEach(b=>b.addEventListener('click',()=>{format=b.dataset.format;page=0;render()}));$('previous').addEventListener('click',()=>{page--;render()});$('next').addEventListener('click',()=>{page++;render()});let lastSize=matchMedia('(max-width:700px)').matches?2:3;addEventListener('resize',()=>{const nextSize=matchMedia('(max-width:700px)').matches?2:3;page=Math.floor(page*lastSize/nextSize);lastSize=nextSize;render()});
-function translate(){document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.querySelectorAll('[data-zh][data-en]').forEach(e=>e.textContent=e.dataset[lang].replace(/\\n/g,'\n'));render();if($('player').open)showItem()}
-translate();switchPanel(location.hash.slice(1));
+  const $ = id => document.getElementById(id);
+  const text = value => Array.isArray(value) ? value[1] : value;
+  let project = ['crossin','research','chathub','kulikuli'].includes(new URLSearchParams(location.search).get('project')) ? new URLSearchParams(location.search).get('project') : 'crossin', format = 'video', viewIndex = 0, viewItems = [], slideIndex = 0;
+  const projects = {
+    crossin: { name: 'crossin', label: 'rednote / Meta paid assets', logo: 'crossin', site: 'https://www.crossin.com/', social: 'https://www.instagram.com/crossin.post/', socialLabel: 'Instagram', description: 'A postcard app for sharing photos and staying close to the people you miss', work: 'Paid video ads for Meta, designed to drive app downloads', role: 'Audience research / Concepts / Copy / Video production' },
+    research: { name: 'rednote', logo: 'rednote', site: 'https://www.rednote.com/', label: 'rednote / User interview recruitment', description: 'Recruitment videos and posters for user interviews, alongside community campaign materials', work: 'Creative for Instagram and TikTok, tailored to different cities and interest groups', role: 'Audience research / Copy / Videos / Posters' },
+    chathub: { name: 'ChatHub', label: 'If Tech / TikTok content', logo: 'chathub', site: 'https://chathub.gg/', social: 'https://www.tiktok.com/@chathub.gg.au', socialLabel: 'TikTok', description: 'An AI workspace for using and comparing multiple chatbots side by side', work: 'Content for the official TikTok account, turning product features into relatable short videos', role: 'Ideas / Scripts / Filming / Editing' },
+    kulikuli: { name: 'KuliKuli', label: 'If Tech / Instagram content', logo: 'kulikuli', site: 'https://kulikuli.app/', social: 'https://www.instagram.com/kulikuliapp__/', socialLabel: 'Instagram', description: 'A travel translation app for menus, shopping and cultural discovery', work: 'Reels and carousel posts for the official Instagram account, built around everyday travel', role: 'Ideas / Scripts / Filming / Editing' }
+  };
+  function items() {
+    if (project === 'chathub') return videos;
+    if (project === 'research') return portfolioMedia.research.filter(item => item.type === format);
+    return portfolioMedia[project];
+  }
+  function titleOf(item) { return text(item.displayTitle || item.title); }
+  function icon(name) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('ui-icon'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#icon-' + name); svg.append(use); return svg;
+  }
+  // Keep natural image proportions and DOM reading order in a masonry grid.
+  let layoutFrame = 0, pendingProject = null;
+  function layoutMedia() {
+    cancelAnimationFrame(layoutFrame);
+    layoutFrame = requestAnimationFrame(() => {
+      if ($('work').hidden) return;
+      [...$('gallery').children].forEach(card => {
+        const height = card.firstElementChild.getBoundingClientRect().height;
+        card.style.gridRowEnd = 'span ' + Math.ceil(height + 16);
+      });
+    });
+  }
+  const mediaObserver = new ResizeObserver(layoutMedia);
+  function render() {
+    const p = projects[project];
+    $('project-number').textContent = p.label;
+    $('project-name').textContent = p.name;
+    $('project-description').textContent = p.description;
+    $('project-work').textContent = p.work;
+    $('project-responsibilities').replaceChildren(...p.role.split(' / ').map(role => { const li = document.createElement('li'); li.textContent = role; return li; }));
+    $('mobile-project').value = project;
+    $('product-social').hidden = !p.social;
+    if (p.social) { $('product-social').href = p.social; $('social-label').textContent = p.socialLabel; $('product-social').setAttribute('aria-label', p.name + ' on ' + p.socialLabel); }
+    const logo = $('project-logo'); logo.hidden = !p.logo; logo.classList.toggle('wordmark', p.logo === 'rednote');
+    if (p.logo) { logo.src = 'assets/brands/' + p.logo + '.png'; logo.alt = p.name + ' logo'; }
+    else { logo.removeAttribute('src'); logo.alt = ''; }
+    $('product-site').hidden = !p.site;
+    if (p.site) { $('product-site').href = p.site; $('product-site').setAttribute('aria-label', p.name + ' website'); }
+    document.querySelectorAll('[data-project]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.project === project)));
+    $('format-tabs').hidden = project !== 'research';
+    document.querySelectorAll('[data-format]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.format === format)));
+    const list = items(), gallery = $('gallery');
+    mediaObserver.disconnect(); gallery.replaceChildren(); $('work').scrollTop = 0; $('gallery').parentElement.scrollTop = 0; gallery.dataset.count = String(list.length);
+    list.forEach((item, index) => {
+      const title = titleOf(item), button = document.createElement('button');
+      button.className = 'video-card' + (item.type === 'image' ? ' image-card' : '');
+      button.setAttribute('aria-label', 'View: ' + title);
+      const frame = document.createElement('span'); frame.className = 'frame';
+      const img = document.createElement('img'); img.src = item.type === 'image' ? item.file : item.poster; img.alt = ''; img.loading = index < 4 ? 'eager' : 'lazy'; img.decoding = 'async';
+      const dimensions = mediaDimensions[img.getAttribute('src')];
+      if (dimensions) { img.width = dimensions[0]; img.height = dimensions[1]; }
+      const play = document.createElement('span'); play.className = 'play'; play.append(icon(item.type === 'image' ? 'external' : 'play'));
+      const caption = document.createElement('span'); caption.className = 'card-caption';
+      const label = document.createElement('span'); label.className = 'card-label'; label.textContent = title;
+      caption.append(label); frame.append(img, play);
+      const content = document.createElement('span'); content.className = 'media-card-content'; content.append(frame, caption); button.append(content);
+      button.addEventListener('click', () => {
+        viewItems = list; viewIndex = index; showItem(); $('player').showModal(); window.portfolioUX?.openViewer();
+        if (item.type !== 'image') $('focused-video').play().catch(() => {});
+      });
+      gallery.append(button); mediaObserver.observe(content);
+    });
+  }
+  function showItem() {
+    slideIndex = 0;
+    const item = viewItems[viewIndex], image = item.type === 'image', p = projects[project], video = $('focused-video');
+    video.pause(); video.removeAttribute('src'); video.load(); video.hidden = image;
+    $('focused-image').hidden = !image;
+    $('viewer-project').textContent = p.label;
+    $('video-title').textContent = titleOf(item);
+    $('video-duration').textContent = image ? (item.images ? 'Image post · ' + item.images.length + ' slides' : 'Poster') : item.duration + 's';
+    $('original').hidden = !item.url;
+    if (item.url) $('original').href = item.url;
+    $('viewer-context').textContent = text(item.context) || p.work;
+    document.querySelector('.player-note').textContent = 'My role: ' + p.role;
+    $('viewer-count').textContent = (viewIndex + 1) + ' / ' + viewItems.length;
+    $('viewer-prev').disabled = viewIndex === 0;
+    $('viewer-next').disabled = viewIndex === viewItems.length - 1;
+    $('image-pager').hidden = !item.images;
+    if (image) showSlide();
+    else { video.preload = 'auto'; video.src = item.file; video.poster = item.poster; video.load(); }
+  }
+  function showSlide() {
+    const item = viewItems[viewIndex], slides = item.images || [{ file: item.file, title: titleOf(item) }], slide = slides[slideIndex];
+    window.portfolioUX?.imageChange(); $('focused-image').src = slide.file; $('focused-image').alt = slide.title;
+    $('image-count').textContent = (slideIndex + 1) + ' / ' + slides.length;
+    $('image-prev').disabled = slideIndex === 0; $('image-next').disabled = slideIndex === slides.length - 1;
+  }
+  $('image-prev').addEventListener('click', () => { if (slideIndex > 0) { slideIndex--; showSlide(); } });
+  $('image-next').addEventListener('click', () => { if (slideIndex < viewItems[viewIndex].images.length - 1) { slideIndex++; showSlide(); } });
+  $('viewer-prev').addEventListener('click', () => { if (viewIndex > 0) { viewIndex--; showItem(); } });
+  $('viewer-next').addEventListener('click', () => { if (viewIndex < viewItems.length - 1) { viewIndex++; showItem(); } });
+  $('focused-video').addEventListener('error', () => { if ($('focused-video').getAttribute('src')) $('viewer-context').textContent = 'This video couldn’t load. Please reopen it or check your connection'; });
+  $('close-player').addEventListener('click', () => $('player').close());
+  $('player').addEventListener('click', event => {
+    if (event.target !== $('player')) return;
+    const rect = $('player').getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) $('player').close();
+  });
+  $('player').addEventListener('close', () => {
+    $('focused-video').pause(); $('focused-video').removeAttribute('src'); $('focused-video').load(); $('focused-image').removeAttribute('src');
+  });
+  function switchPanel(id) {
+    const order = ['home', 'work', 'about', 'contact'];
+    if (!order.includes(id)) id = 'home';
+    const apply = () => {
+    document.querySelectorAll('.panel').forEach(panel => { panel.hidden = panel.id !== id; panel.classList.toggle('active', panel.id === id); });
+    document.querySelectorAll('[data-panel]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.panel === id)));
+    $('position').textContent = '0' + (order.indexOf(id) + 1) + ' / 04';
+    if ($('player').open) $('player').close();
+    };
+    if (window.portfolioUX) window.portfolioUX.switchPanel(id, apply); else apply();
+  }
+  document.querySelectorAll('[data-panel],[data-go]').forEach(button => button.addEventListener('click', () => location.hash = button.dataset.panel || button.dataset.go));
+  window.addEventListener('hashchange', () => switchPanel(location.hash.slice(1)));
+  function selectProject(next) {
+    if (project === next && pendingProject === null) return;
+    pendingProject = next;
+    window.portfolioUX.swapProject(() => {
+      pendingProject = null; project = next; format = 'video'; render();
+      document.dispatchEvent(new CustomEvent('portfolio:projectchange', {detail: {project}}));
+    });
+  }
+  document.querySelectorAll('[data-project]').forEach(button => button.addEventListener('click', () => selectProject(button.dataset.project)));
+  $('mobile-project').addEventListener('change', event => selectProject(event.target.value));
+  document.querySelectorAll('[data-format]').forEach(button => button.addEventListener('click', () => {
+    if (format === button.dataset.format) return;
+    window.portfolioUX.swapProject(() => { format = button.dataset.format; render(); });
+  }));
+  render(); switchPanel(location.hash.slice(1));
 })();
