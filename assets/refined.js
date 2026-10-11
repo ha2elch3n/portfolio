@@ -4,7 +4,7 @@
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
   const animate = window.anime?.animate;
   const channels = new Map();
-  let pageCommit = null, projectCommit = null, currentPanel = null, previousImage = null;
+  let projectCommit = null, currentPanel = null, previousImage = null;
   function stop(channel) {
     const entry = channels.get(channel);
     if (!entry) return;
@@ -34,18 +34,34 @@
     else indicatorAnimation = animate(indicator,{left,width,duration:200,ease:'outCubic'});
   }
   new ResizeObserver(() => positionIndicator(true)).observe(nav);
+  function finishPageTransition() {
+    stop('page-out'); stop('page-in');
+    document.querySelectorAll('.panel-leaving,.panel-entering').forEach(panel => {
+      panel.classList.remove('panel-leaving','panel-entering');
+      panel.inert = false; panel.removeAttribute('aria-hidden');
+      panel.hidden = panel.id !== currentPanel;
+    });
+  }
   window.portfolioUX = {
     switchPanel(id, apply) {
-      stop('page'); pageCommit = null;
-      const previous = currentPanel; currentPanel = id;
-      const commit = () => {
-        pageCommit = null; apply(); positionIndicator(!previous);
-        const panel = document.getElementById(id);
-        run('page',[panel],{opacity:[0.5,1],y:[6,0],duration:170,ease:'outCubic'});
-      };
-      if (!previous || previous === id) { apply(); positionIndicator(true); return; }
-      pageCommit = commit;
-      run('page',[document.getElementById(previous)],{opacity:[1,0.6],duration:80,ease:'outCubic'},commit);
+      // Finish immediately on interruption: no queued transitions or delayed navigation.
+      finishPageTransition();
+      const previous = currentPanel;
+      const outgoing = previous ? document.getElementById(previous) : null;
+      const focusWasInside = outgoing?.contains(document.activeElement);
+      currentPanel = id;
+      apply(); positionIndicator(!previous);
+      if (!previous || previous === id || reduced.matches || !animate) return;
+      const order = ['home','work','about','contact'];
+      const direction = order.indexOf(id) > order.indexOf(previous) ? 1 : -1;
+      const incoming = document.getElementById(id);
+      outgoing.hidden = false; outgoing.inert = true;
+      outgoing.setAttribute('aria-hidden','true'); outgoing.classList.add('panel-leaving');
+      incoming.classList.add('panel-entering');
+      if (focusWasInside) nav.querySelector(`[data-panel="${id}"]`)?.focus({preventScroll:true});
+      // Both panels move on the same beat; the header and footer stay still.
+      run('page-out',[outgoing],{opacity:[1,0],x:[0,-24*direction],duration:220,ease:'outCubic'});
+      run('page-in',[incoming],{opacity:[0,1],x:[24*direction,0],duration:220,ease:'outCubic'},finishPageTransition);
     },
     swapProject(apply) {
       stop('project'); stop('cards'); projectCommit = null;
@@ -99,9 +115,11 @@
   function reset() {
     [...channels.keys()].forEach(stop); indicatorAnimation?.cancel();
     hoverTargets.forEach(el=>el.style.removeProperty('transform')); previousImage?.remove(); previousImage=null;
-    const page = pageCommit, project = projectCommit; pageCommit = projectCommit = null;
-    page?.(); project?.(); positionIndicator(true);
+    finishPageTransition();
+    const project = projectCommit; projectCommit = null;
+    project?.(); positionIndicator(true);
   }
   reduced.addEventListener('change', reset); fine.addEventListener('change',reset); window.addEventListener('blur',reset);
+  window.addEventListener('resize',finishPageTransition);
   document.documentElement.classList.add('anime-motion');
 })();

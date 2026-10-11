@@ -45,8 +45,14 @@ html[data-design=refined] #work .media-card-content{
  html[data-design=refined] #work .media-card-content{transition:none}
 }
 
-/* Keep the mobile annotation above the photo; the arrow points below the face. */
+/* A short mobile arrow suggests the portrait direction without crossing the face. */
+.profile-sticker .sticker-arrow-mobile{display:none}
 @media(max-width:700px){
  .profile-sticker{left:-2px;right:auto;top:-16px}
- .profile-sticker svg{right:-27px;top:36px;width:24px;height:28px;transform:rotate(-45deg)}
+ .profile-sticker .sticker-arrow-desktop{display:none}
+ .profile-sticker .sticker-arrow-mobile{display:block;left:calc(100% - 2px);right:auto;top:10px;width:28px;height:28px;transform:none}
 }
+
+/* Only the departing panel is overlaid; each page keeps its normal layout and scroll. */
+html[data-design=refined] .panel-leaving{position:absolute;inset:0;z-index:1;pointer-events:none}
+html[data-design=refined] .panel-entering{position:relative;z-index:2}
